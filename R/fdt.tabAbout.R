@@ -1,4 +1,4 @@
-#' Tab about for Fatigue Shiny Apps
+#' Tab "About" for Fatigue Shiny Apps
 #'
 #' @export
 

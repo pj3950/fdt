@@ -1,0 +1,11 @@
+Package: fatigueapps
+Type: Package
+Title: Shiny Apps for Fatigue and load analysis
+Version: 0.1.0
+Author: Pär Johannesson
+Maintainer: Pär Johannesson <Par.Johannesson@gmail.com>
+Description: Shiny Apps for fatigue and load analysis including rainflow cycles. 
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.1.1
