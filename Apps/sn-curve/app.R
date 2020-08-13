@@ -13,7 +13,7 @@
 library(shiny)
 
 source("SNwPJ_v2.4.R")
-source("TbxFatigueDesignTool.R")
+#source("TbxFatigueDesignTool.R")
 
 
 #========================================================
@@ -21,6 +21,7 @@ source("TbxFatigueDesignTool.R")
 #========================================================
 
 source("app.tabs.R")
+source("app.tab.about.R")
 
 ui <- fluidPage(
   
@@ -98,7 +99,7 @@ server <- function(input, output) {
     if (!is.null(inFile))
       Fname <- inFile$datapath
     else
-      Fname <- "laser_cbj.txt"
+      Fname <- "data/laser_cbj.txt"
     
     # Läs in datafilen till en dataframe
     dat <- read.table(Fname, sep="", dec=".", header=FALSE, skip=0, as.is=TRUE, fill=TRUE)

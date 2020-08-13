@@ -20,16 +20,16 @@ fdt.tabAbout <-
              h2("About"),
              
              # Version
-             p(strong(includeText("VERSION.txt"))),
+             p(strong(includeText("About/VERSION.txt"))),
              
              # RISE Fatigue Design Tool
              h3("RISE Fatigue Design Tool"),
-             includeHTML("About.html"),
+             includeHTML("About/About.html"),
              
              # Licence
              h3("Licence"),
              
-             pre(includeText("LICENCE.txt"))
+             pre(includeText("About/LICENCE.txt"))
              
            )
   )
