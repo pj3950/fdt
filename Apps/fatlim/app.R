@@ -1,5 +1,7 @@
 #---------------------------------
-# App: Endurance Limit Estimation
+# Shiny App: Endurance Limit Estimation
+#
+# Pär Johannesson, 14-Aug-2020
 #
 # This is a Shiny web application. You can run the application by clicking
 # the 'Run App' button above.
@@ -14,101 +16,32 @@ library(shiny)
 
 source("toolboxFatLim.R")
 
-
 #========================================================
 # Define UI for application 
 #========================================================
 
-#ui <- navbarPage(title="Endurance Limit Estimation",
+source("app.tabs.R")
+source("app.tab.about.R")
+
 ui <- fluidPage(
   
   # Application title
-  titlePanel("Endurance Limit Estimation"),
+  titlePanel("Endurance Limit Estimation - RISE Fatigue Design Tool"),
   
-
+  
   # Output: Tabset w/ plot, summary, and table ----
   tabsetPanel(#type = "tabs",
     
     # Tab: Input ----
-    tabPanel("Input data", 
-             
-             # sidebarPanel: for Input ---
-             sidebarPanel(
-               h3("Input"),
-               fileInput("file", 
-                         label = "Fatigue data (text file with three columns)")
-             ),
-             
-             # mainPanel - for Output
-             mainPanel(
-               # Title & Info
-               h3("Instructions"),
-               
-               p(textOutput("InstText")),
-               
-               # Output
-               h3(textOutput("InputText")),
-               tableOutput("TabFLdata")
-             )
-    ),
+    TabInput,
     
     # Tab: Result ----
-    tabPanel("Result", 
-             # sidebarPanel - for Input
-             sidebarPanel(
-               # Title
-               h3("Settings"),
-               
-               # Input: Run-out level (NO cycles)
-               textInput("RO", 
-                         label = "Run-out level (NO cycles)", 
-                         value = "2e6"),
-               
-               # Input: Unit
-               textInput("unit", 
-                         label = "Unit", 
-                         value = "MPa"),
-               
-               # Input: Confidence level [%]
-               numericInput("conf.level", 
-                            label = "Confidence level [%]", 
-                            value = 95),
-               
-               hr(),
-               
-               # Input: Title, Ylabel & Xlabel
-               textInput("title", label = "Title", 
-                         value = ""),  
-               textInput("ylab", label = "Ylabel", 
-                         value = "Load level"),  
-               textInput("xlab", label = "Xlabel", 
-                         value = "Specimen number"),
-               
-               hr(),
-               
-               # Submitt button: Update
-               submitButton("Update")
-             ),
-             
-             # mainPanel - for Output
-             # Show a plot of the data and estimated endurance limit and print results
-             mainPanel(
-               # Title & Info
-               h2("Result: Estimated endurance limit"),
-               p(textOutput("InfoText1")),
-               
-               # Plot results
-               plotOutput("FLplot"),
-               
-               # Present results in three paragraphs
-               p(textOutput("ResultText1")),
-               p(textOutput("ResultText2")),
-               p(textOutput("ResultText3"))
-             )
-    )
+    TabResult,
+    
+    # Tab: About ----
+    fdt.tabAbout
   )
 )
-
 
 
 #========================================================
@@ -127,9 +60,9 @@ server <- function(input, output) {
     if (!is.null(inFile))
       Fname <- inFile$datapath
     else
-      Fname <- "fatlimnytt.txt"
+      Fname <- "data/fatlimnytt.txt"
 
-    # Läs in datafilen till en dataframe
+    # Read file to data.frame
     dat <- read.table(Fname, sep="", dec=".", header=FALSE, skip=0, as.is=TRUE)
     names(dat) <- c("Specimen number", "Load level", "Failure")
     

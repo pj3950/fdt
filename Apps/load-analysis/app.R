@@ -1,6 +1,6 @@
-# R-app: Load Analysis for Fatigue
+# Shiny App: Load Analysis for Fatigue
 #
-# Pär Johannesson, 03-Sep-2018, 13-11-2018
+# Pär Johannesson, 03-Sep-2018, 13-Nov-2018, 14-Aug-2020
 #
 # This is a Shiny web application. You can run the application by clicking
 # the 'Run App' button above.
@@ -67,7 +67,7 @@ source("app.tab.about.R")
 ui <- fluidPage(
   
   # Application title
-  titlePanel("Load Analysis for Fatigue"),
+  titlePanel("Load Analysis for Fatigue - RISE Fatigue Design Tool"),
   
   
   # Output: Tabset w/ plot, summary, and table ----
@@ -99,57 +99,7 @@ server <- function(input, output) {
   # Global varables
   loadExample <- reactiveVal(0)
   
-  # ------------
-  # Functions
-  # TS0 <- reactive({
-  #   inFile <- input$file
-  # 
-  #   if (is.null(inFile))
-  #     return(NULL)
-  # 
-  #   # Läs in datafilen till en dataframe
-  #   TS0 <- read.table(inFile$datapath, header=FALSE, stringsAsFactors=FALSE, fill=TRUE)
-  # 
-  #   TS0
-  # })
-  
-  # ------------
-  # Functions
-  # TS0ex <- reactive({
-  #   loadEx <- loadExample()
-  # 
-  #   if(loadEx == 1)
-  #   {
-  #     Fname <- "load_short.txt"
-  #   }
-  #   else
-  #     return(NULL)
-  # 
-  #   # Läs in datafilen till en dataframe
-  #   TS0 <- read.table(Fname, header=FALSE, stringsAsFactors=FALSE, fill=TRUE)
-  # 
-  #   TS0
-  # })
-  # 
-  # RFcalc <- reactive({
-  #   print("RFcalc")
-  #   
-  #   TS0 <- TS0()
-  #   TS0ex <- TS0ex()
-  #   
-  #   if (is.null(TS0) & is.null(TS0ex))
-  #       return(NULL)
-  #   
-  #   TS <- as.matrix(TS0)
-  #   
-  #   # Beräkna Rainflow filter
-  #   RF <- RFw(TS, h=input$h, b=input$b)
-  #   RF$TS <- TS
-  #   
-  #   RF
-  # })
-  # 
-  
+
   # ------------
   # Functions
   RFcalc_old <- reactive({
@@ -172,7 +122,6 @@ server <- function(input, output) {
     RF
   })
 
-#  RFcalc <- reactive({
   RFcalc <- reactive({
     
 #    print(input$file)
@@ -186,29 +135,12 @@ server <- function(input, output) {
     else
       Fname <- "data/load_short.txt"
     
-    # {
-    #   # if(values$loadExample)
-    #   #   # if(!is.null(values))
-    #   #   {
-    #   #   Fname <- "load_short.txt"
-    #   # }
-    #   if(loadEx == 1)
-    #   {
-    #     Fname <- "load_short.txt"
-    #   }
-    #   else
-    #     return(NULL)
-    # }
-    
-    
-#    Fname ="load_short.txt"
-    
-    # Läs in datafilen till en dataframe
-    #TS0 <- read.table(inFile$datapath, header=FALSE, stringsAsFactors=FALSE, fill=TRUE)
+
+    # Read data file to a data.frame
     TS0 <- read.table(Fname, header=FALSE, stringsAsFactors=FALSE, fill=TRUE)
     TS <- as.matrix(TS0)
     
-    # Beräkna Rainflow filter
+    # Rainflow filter signal (remove small cycles)
     RF <- RFw(TS, h=input$h, b=input$b)
     RF$TS <- TS
     
@@ -254,20 +186,6 @@ server <- function(input, output) {
   })
   
 
-#   observeEvent(input$LoadShortLS, {
-# #    FnameEx <<- "load_short.txt"
-#     loadExample(1)
-#     
-#     # values$loadExample <<- TRUE
-#     # values$Fname <<- "load_short.txt"
-#     # input$file <- NA
-#     
-# #    input$file <- data.frame(datapath="./load_short.txt")
-#     # Fname<-"load_short.txt"
-#     # dat0 <- read.table(Fname, sep="",dec=".",header=FALSE, skip=0, as.is=TRUE)
-#     # names(dat0) <- c("t", "L")
-#   })
-  
   output$InputPlot <- renderPlot({
     
     # Debugging
@@ -323,14 +241,14 @@ server <- function(input, output) {
     #RF <- RFw(TS, h=1, b=5)
     
     
-    # Beräkna Rainflow filter
+    # Rainflow filter
     RF <- RFcalc()
     
     if (is.null(RF))
       return(NULL)
     
-    # Resultaten plottas
-    
+    # Plot results
+
     split.screen(c(1,2))    # split bottom half in two
     
     # Plot Level crossings

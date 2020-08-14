@@ -1,5 +1,7 @@
 #---------------------------------
-# App: Wöhler Curve
+# Shiny App: Wöhler Curve Estimation
+#
+# Pär Johannesson, 14-Aug-2020
 #
 # This is a Shiny web application. You can run the application by clicking
 # the 'Run App' button above.
@@ -26,7 +28,7 @@ source("app.tab.about.R")
 ui <- fluidPage(
   
   # Application title
-  titlePanel("Wöhler Curve - RISE Fatigue Design Tool"),
+  titlePanel("Wöhler Curve Estimation - RISE Fatigue Design Tool"),
   
   
   # Output: Tabset w/ plot, summary, and table ----
@@ -42,7 +44,6 @@ ui <- fluidPage(
     fdt.tabAbout
   )
 )
-
 
 
 #========================================================
