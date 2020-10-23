@@ -34,9 +34,14 @@ TabResult <-
              h3("Prediction"),
              
              # Input: Demand life
-             numericInput("Npred", 
+             numericInput("pred.S.from.N", 
                           label = "Demand life", 
                           value = "2e6"),
+             
+             # Input: Demand life
+             numericInput("pred.N.from.S", 
+                          label = "Demand load", 
+                          value = ""),
              
              # Input: Interval (None / Pred / Conf /Both) [%]
              selectInput("int", label = "Interval", 
@@ -93,7 +98,7 @@ TabResult <-
              
              # Input: Show equation / Plot demand life
              checkboxInput("showEq", label = "Show Equation", value=TRUE),
-             #             checkboxInput("plot.Npred", label = "Plot demand life", value=TRUE),
+             #             checkboxInput("plot.pred.S.from.N", label = "Plot demand life", value=TRUE),
              
              # Input: Prior knowledge CoV (low,high)
              # fluidRow(

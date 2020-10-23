@@ -14,7 +14,8 @@
 
 library(shiny)
 
-source("SNwPJ_v2.4.R")
+source("SNwPJ_v2.5.0.R")
+#source("SNwPJ_v2.4.R")
 #source("TbxFatigueDesignTool.R")
 
 
@@ -22,8 +23,8 @@ source("SNwPJ_v2.4.R")
 # Define UI for application 
 #========================================================
 
-source("app.tabs.R")
-source("app.tab.about.R")
+source("app.tabs.R", encoding = "UTF-8")
+source("app.tab.about.R", encoding = "UTF-8")
 
 ui <- fluidPage(
   
@@ -47,22 +48,27 @@ ui <- fluidPage(
 
 
 #========================================================
-# Define server logic required to estimate endurance limit and plot result
+# Define server logic required to estimate Wöhler curve and plot result
 #========================================================
 
 server <- function(input, output) {
   
   # ------------
-  # Reactive function: Estimate Endurance limit when data has been loaded
+  # Reactive function: Estimate Wöhler curve when data has been loaded
   SNcalc0 <- function(dat) {
     
-    # Plot results
+    # Demand life
+    if(!is.nan(input$pred.S.from.N)) pred.S.from.N<-input$pred.S.from.N else pred.S.from.N=NA
+    
+    #Demand load
+    if(!is.nan(input$pred.N.from.S)) pred.N.from.S<-input$pred.N.from.S else pred.N.from.S=NA
+    
+    # Title & axis labels
     title <- input$title
     xlab <- input$xlab
     ylab <- input$ylab
-#    if(input$plot.Npred) Npred<-input$Npred else Npred=0
-    if(!is.nan(input$Npred)) Npred<-input$Npred else Npred=NA
-#    Npred <- input$Npred
+    
+    # Automativc title
     if(nchar(title)==0) {
       title <- 
         switch(input$int,
@@ -72,20 +78,25 @@ server <- function(input, output) {
                "Both" = paste0("Wöhler curve with ", input$conf.level, "% confidence and prediction limits")
         )
     }
+
+    # Add unit to ylab
+    if(nchar(input$unit)>0) {ylab <- paste0(ylab, " [", input$unit, "]")}
+    
+    # Axis: min & max
     Nrange <- c(input$xlim.min, input$xlim.max)
     Srange <- c(input$ylim.min, input$ylim.max)
     
-    if(nchar(input$unit)>0) {ylab <- paste0(ylab, " [", input$unit, "]")}
-    
+    # Estiamte & Pot Wöhler curve
     SN <- SNw(dat$S, dat$N, dat$Fail, 
-              conf.level=input$conf.level/100, Npred=Npred, #Nstrength=input$N.pred, 
+              conf.level=input$conf.level/100, pred.S.from.N=pred.S.from.N, pred.N.from.S=pred.N.from.S, 
               formel=input$showEq, int=input$int,
               beta_low=input$b.low, beta_high=input$b.high, S_prior=input$CoV.median, S_prior_high=input$CoV.high,
               title=title, xlab=xlab, ylab=ylab, Nrange=Nrange, Srange=Srange)
-    #    fatlim.plot(SN, title=title, xlab=xlab, ylab=ylab, ylim=NULL)
-    
+
+    # Save original data
     SN$dat <- dat
     
+    # Output
     SN
   }
   
@@ -113,7 +124,7 @@ server <- function(input, output) {
     # Estimate Endurance limit
     SN <- SNcalc0(dat)
     # SNw(dat$S,dat$N,dat$fail, beta_low=input$b.low, beta_high=input$b.high, #beta_low=beta_prior[1], beta_high=beta_prior[2],
-    #           conf.level=input$conf.level/100, Nstrength=input$N.pred, Npred=input$N.pred,
+    #           conf.level=input$conf.level/100, Nstrength=input$N.pred, pred.S.from.N=input$N.pred,
     #            title="SN-curve", ylabel="Load", xlabel="N, number of cycles to failure")
     
     #    FL <- fatlim.est(dat, conf.level=input$conf.level/100, plot=0)
@@ -285,7 +296,7 @@ server <- function(input, output) {
     # if(nchar(input$unit)>0) {ylab <- paste0(ylab, " [", input$unit, "]")}
     # 
     # SNw(dat$S, dat$N, dat$fail, beta_low=input$b.low, beta_high=input$b.high,
-    #     conf.level=input$conf.level/100, Nstrength=input$N.pred, Npred=input$N.pred,
+    #     conf.level=input$conf.level/100, Nstrength=input$N.pred, pred.S.from.N=input$N.pred,
     #     title=title, xlab=xlab, ylab=ylab)
     #    fatlim.plot(SN, title=title, xlab=xlab, ylab=ylab, ylim=NULL)
     
