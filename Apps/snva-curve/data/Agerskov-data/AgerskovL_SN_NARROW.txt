@@ -1,0 +1,12 @@
+NARROW         169     8883241
+NARROW         213     3490255
+NARROW         216     3268028
+NARROW         254     1892966
+NARROW         256     3536482
+NARROW         310     1068000
+NARROW         355      700994
+NARROW         415      517947
+NARROW         534      312094
+NARROW         644      174927
+NARROW         666      156418
+NARROW         756       93019
