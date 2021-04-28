@@ -61,16 +61,17 @@ fatlim.est <- function(data, RO=2e6, conf.level=0.95, int="conf",
     fail<-RR[[1]][RR[[2]]==1]
     nofail<-RR[[1]][RR[[2]]==0]
     
-    if (length(fail)==0) {
-      print("Only run-outs, thus it is not possible to estimate fatigue limit.")
+    if (length(RR)<3) {
+      ErrorText = paste("Too few tests (", length(RR), ")", ", thus it is not possible to estimate fatigue limit.")
       plot_and_return = TRUE
     }
     else if (length(nofail)==0) {
-      print("Only failures, thus it is not possible to estimate fatigue limit.")
+      ErrorText = "Only failures, thus it is not possible to estimate fatigue limit."
       plot_and_return = TRUE
     }
     else if (median(fail)<=median(nofail)) {
-      print("Unrealistic test result, perhaps survivers and fails are mixed up!")
+      ErrorText = paste("Median of failures (", median(fail), ") <= median of survivors (", median(nofail), "), thus it is not possible to estimate fatigue limit.", 
+      "Perhaps survivors and failures are mixed up!")
       plot_and_return = TRUE
     }
     
@@ -84,15 +85,22 @@ fatlim.est <- function(data, RO=2e6, conf.level=0.95, int="conf",
       symbol[nofailures]<-1
       n_of_levels<-diff(range(RR[,1]))/min(abs(diff(RR[,1])))
       
-      plot(1:length(RR[,1]),RR[,1],pch=symbol,lwd=1,cex=1,xlab=xaxel,ylab=yaxel,main=title, ylim=ylim)
+      #plot(1:length(RR[,1]), RR[,1], pch=symbol, lwd=1,cex=1, xlab=xaxel, ylab=yaxel, main=title, ylim=ylim)
+      plot(1:length(RR[,1]), RR[,1], pch=symbol, lwd=1,cex=1, main="Fatigue limit test data", sub=ErrorText, xlab="Specimen number", ylab="Load level")
       grid()
       
-      #return("Unrealistic test result, perhaps survivers and fails are mixed up!")
-      result <- list("my"=NA, "sigma"=NA, "mylim"=c(NA,NA), "sigmalim"=c(NA,NA), "predstdmy"=NA, "predlow"=NA)
+      print(ErrorText)
+      
+      #  result.out  
+      result <- list("ErrorText"=ErrorText, "my"=NA, "sigma"=NA, "mylim"=c(NA,NA), "sigmalim"=c(NA,NA), "predstdmy"=NA, "predlow"=NA)
+      result$data <- RR
+      result$RO <- RO
+      result$conf.level <- conf.level 
+      result$int <- int
+
       return(result)
     }
-    
-    
+
     
     # -------------------------------------------------------------------------------
     # Funktion för predictive likelihood för enskilt predikterat värde S
@@ -127,7 +135,7 @@ fatlim.est <- function(data, RO=2e6, conf.level=0.95, int="conf",
     # -------------------------------------------------------------------------------
     # Funktion för allmän utmattningsgränsberäkning
     
-    fatlim<-function(RR,conf.level,int)
+    fatlim<-function(RR, conf.level, int)
       #utmattningsgränsberäkning. Notera att man kan välja att ha en data.frame som input eller ha
       #två variabler med fail respektive nofail.
       
@@ -261,20 +269,14 @@ fatlim.est <- function(data, RO=2e6, conf.level=0.95, int="conf",
     } 
     # END: fatlim 
     # -------------------------------------------------------------------------------
-    
-    
-    
+
     
     #Vi skall nu räkna ut predictive likelihood för många värden för att kunna normera och
     #beräkna varians
     
     #bestäm först utmattningsgränsen på vanligt sätt
     
-    result<-fatlim(RR,conf.level,int)
-    
-    
-    print(result)
-    
+    result<-fatlim(RR, conf.level, int)
     
     #bilda en lämplig referensvektor av laster att prediktera för
     
@@ -327,7 +329,8 @@ fatlim.est <- function(data, RO=2e6, conf.level=0.95, int="conf",
     result$RO <- RO
     result$conf.level <- conf.level 
     result$int <- int
-    
+    result$ErrorText <- NA  # No error
+
 #    print(result)
     
     # Plot: Stair case test results
@@ -344,19 +347,28 @@ fatlim.est <- function(data, RO=2e6, conf.level=0.95, int="conf",
 
 
 # ===========================================================
-# Function:
-#   fatlim.plot
-#
+# Function:  fatlim.plot
+#   fatlim.plot(
+#     FL,         # Fatigue limit test data
+#     int="conf", # "conf"=confidence interval; "none"=no intervals
+#     title="Endurance limit with 95% confidence limits", 
+#     xlab="Specimen number", 
+#     ylab="Load level", 
+#     ylim=NULL, 
+#     lwd=1, 
+#     cex=1, 
+#     cex.txt=1)
 #
 # ===========================================================
 
-fatlim.plot <- function(FL, int="conf", title="Endurance limit with 95% confidence limits",
-                       xlab="Specimen number", ylab="Load level", ylim=NULL, lwd=1, cex=1, cex.txt=1)
+fatlim.plot <- function(FL, int="conf", title="Endurance limit with 95% confidence limits", sub="",
+                       xlab="Specimen number", ylab="Load level", ylim=NULL, lwd=1, cex=1, cex.txt=1
+                       )
   
 {
   RR <- FL$data
 
-  #Vi plottar nu själva provningsresultatet
+  # Plot fatigue limit test results
   nofailures<-which(RR[,2]==0)
   failures<-which(RR[,2]==1)
   symbol<-numeric(0)
@@ -364,7 +376,7 @@ fatlim.plot <- function(FL, int="conf", title="Endurance limit with 95% confiden
   symbol[nofailures]<-1
   n_of_levels<-diff(range(RR[,1]))/min(abs(diff(RR[,1])))
   
-  plot(1:length(RR[,1]),RR[,1],pch=symbol, xlab=xlab,ylab=ylab,main=title, ylim=ylim, 
+  plot(1:length(RR[,1]),RR[,1],pch=symbol, xlab=xlab,ylab=ylab, main=title, sub=sub, ylim=ylim, 
        lwd=lwd, cex=cex, cex.main=cex.txt, cex.lab=cex.txt, cex.axis=cex.txt)
   grid()
   
@@ -372,11 +384,11 @@ fatlim.plot <- function(FL, int="conf", title="Endurance limit with 95% confiden
   abline(h=FL$my[1],col="blue",lwd=1.5*lwd)
   if (FL$int!="none")
   {
-    abline(h=FL$mylim[1],col="blue",lwd=1.5*lwd,lty="dashed")
-    abline(h=FL$mylim[2],col="blue",lwd=1.5*lwd,lty="dashed")
+    abline(h=FL$mylim[1],col="blue", lwd=1.5*lwd, lty="dashed")
+    abline(h=FL$mylim[2],col="blue", lwd=1.5*lwd,lty="dashed")
   }
   
-  mtext("RISE Fatigue Design Tool",3,0,font=21,cex=0.7*cex.txt,col="blue",adj=1)
+  mtext("RISE Fatigue Design Tool", 3, 0, font=21, cex=0.7*cex.txt,col="blue", adj=1)
   
   
 }

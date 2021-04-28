@@ -86,18 +86,24 @@ server <- function(input, output) {
     unit <- input$unit
     if(nchar(input$unit)>0) {unit <- paste0(" ", input$unit)}
     
-    out1 <- paste0("The mean of the endurance limit at ", input$RO, " cycles is estimated to ", signif(FL$my,3), unit, ". ",
-                   "A ", input$conf.level, "% confidence interval for the endurance limit is [", 
-                   signif(FL$mylim[1],3)," ; ", signif(FL$mylim[2],3), "]", unit, ".")
-    
-    out2 <- paste0("The standard deviation of the endurance limit is estimated to s = ", 
-                   signif(FL$sigma,3), unit, ". ",
-                   "A ", input$conf.level, "% confidence interval for the standard deviation is [", 
-                   signif(FL$sigmalim[1],3)," ; ", signif(FL$sigmalim[2],3), "]", unit, ".")
-    
-    out3 <- paste0("The lower ", (100-input$conf.level)/2, "% prediction limit is ", 
-                   signif(FL$predlow,3), unit, ". ",
-                   "The prediction coefficient of variation is ", signif(FL$predstdmy,3), ".")
+    if(is.na(FL$ErrorText))
+    {
+      
+      out1 <- paste0("The mean of the endurance limit at ", input$RO, " cycles is estimated to ", signif(FL$my,3), unit, ". ",
+                     "A ", input$conf.level, "% confidence interval for the endurance limit is [", 
+                     signif(FL$mylim[1],3)," ; ", signif(FL$mylim[2],3), "]", unit, ".")
+      
+      out2 <- paste0("The standard deviation of the endurance limit is estimated to s = ", 
+                     signif(FL$sigma,3), unit, ". ",
+                     "A ", input$conf.level, "% confidence interval for the standard deviation is [", 
+                     signif(FL$sigmalim[1],3)," ; ", signif(FL$sigmalim[2],3), "]", unit, ".")
+      
+      out3 <- paste0("The lower ", (100-input$conf.level)/2, "% prediction limit is ", 
+                     signif(FL$predlow,3), unit, ". ",
+                     "The prediction coefficient of variation is ", signif(FL$predstdmy,3), ".")
+    }
+    else
+      return(NULL)
     
     list(out1=out1, out2=out2, out3=out3)
     
@@ -158,11 +164,15 @@ server <- function(input, output) {
     
     if (is.null(FL))
       return(paste0("Here results for the estimated endurance limit are presented. First you need to upload a file in the tab input data "))
-    else
-      return(paste0("The estimated endurance limit at ", input$RO, " cycles with ",  
-                    input$conf.level, "% confidence interval is plotted together with the fatigue test data. ",
-                    "The estimated parameters and prediction limits are presented below the graph."
-      ))
+    else {
+      if(is.na(FL$ErrorText))
+        return(paste0("The estimated endurance limit at ", input$RO, " cycles with ",  
+                      input$conf.level, "% confidence interval is plotted together with the fatigue test data. ",
+                      "The estimated parameters and prediction limits are presented below the graph."
+        ))
+      else
+        return(FL$ErrorText)
+    }
   })
   
   # ------------
@@ -186,14 +196,30 @@ server <- function(input, output) {
     if (is.null(FL))
       return(NULL)
     
-    # Plot results
-    title <- input$title
-    xlab <- input$xlab
-    ylab <- input$ylab
-    if(nchar(title)==0) {title <- paste0("Endurance limit with ", input$conf.level, "% confidence limits")}
-    if(nchar(input$unit)>0) {ylab <- paste0(ylab, " [", input$unit, "]")}
+    if(is.na(FL$ErrorText))
+    {
+      
+      # Plot data & results
+      title <- input$title
+      xlab <- input$xlab
+      ylab <- input$ylab
+      if(nchar(title)==0) {title <- paste0("Endurance limit with ", input$conf.level, "% confidence limits")}
+      if(nchar(input$unit)>0) {ylab <- paste0(ylab, " [", input$unit, "]")}
+      
+      return(fatlim.plot(FL, title=title, xlab=xlab, ylab=ylab, ylim=NULL))
+    }
+    else # Error: Only plot data
+    {
+      # Plot data
+      title <- input$title
+      xlab <- input$xlab
+      ylab <- input$ylab
+      if(nchar(title)==0) {title <- paste0("Test data")}
+      if(nchar(input$unit)>0) {ylab <- paste0(ylab, " [", input$unit, "]")}
+      
+      return(fatlim.plot(FL, title=title, xlab=xlab, ylab=ylab, ylim=NULL))
+    }
     
-    fatlim.plot(FL, title=title, xlab=xlab, ylab=ylab, ylim=NULL)
     
   })
   
