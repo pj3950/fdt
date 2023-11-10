@@ -1,6 +1,6 @@
-MIT License
+The MIT License (MIT)
 
-Copyright (c)  2020 Pär Johannesson & Thomas Svensson
+Copyright (c)  2005-2023 Pär Johannesson & Thomas Svensson
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

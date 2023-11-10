@@ -1,0 +1,1 @@
+Load Analysis for Fatigue (Shiny app, part of RISE Fatigue Design Tool)

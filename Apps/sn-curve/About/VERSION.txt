@@ -1,1 +1,1 @@
-Wöhler Curve Estimation (Shiny app), Version: 0.9, 30-Mar-2020
+Version: 0.9, 30-Mar-2020
