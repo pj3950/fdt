@@ -1,24 +1,88 @@
-read.snva.data <- function(grundfil)
-  
+library(xlsx)  # Importing Excel-files
+
+
+read.sn.data <- function(Fname, format='txt')
 {
-  
-  #L?s in provresultat och spektra
-  provresultat<-read.table(grundfil,header=FALSE,stringsAsFactors=FALSE,fill=TRUE)
-  #Skapa en vektor f?r run out
-  if (length(provresultat)>3) { RO<-provresultat$V4 } else   RO<-NA
-  provresultat$skala<-as.numeric(provresultat$V2)
-  provresultat$Nbrott<-as.numeric(provresultat$V3)
-  provresultat$spektrum<-provresultat$V1
-  spectra<-list(list())
-  N<-numeric()
-  for (i in 1:length(provresultat$spektrum))
+  # Classic Fatigue Design Tool format  
+  if(format == 'txt')
   {
-    spectra[[i]]<-read.table(paste(provresultat$spektrum[i],".txt",sep=""),col.names=c("S","n"),header=FALSE, stringsAsFactors=FALSE)
-    spectra[[i]]$S<-spectra[[i]]$S*provresultat$skala[i]
-    N[i]<-provresultat$Nbrott[i]
+    #L?s in SN-data
+    dat <- read.table(Fname, sep="", dec=".", header=FALSE, skip=0, as.is=TRUE, fill=TRUE)
+    #Kolla om vi har en tredje kolumn, om inte skapa en sådan.
+    if(ncol(dat) < 3)
+      dat[,3]="F"
+    colnames(dat) <- c( "S", "N", "fail")
   }
   
-  dat <- list(provresultat=provresultat, spectra=spectra, N=N, RO=RO)
+  # Excel format of data
+  if(format == 'xlsx')
+  {
+    #L?s in SN-data
+    dat <- read.xlsx(Fname, 1)  # read first sheet
+    if(ncol(dat) < 3)
+      dat[,3]="F"
+    colnames(dat) <- c( "S", "N", "fail")
+  }
+
+  dat
+}
+
+read.snva.data <- function(Fname, format='xlsx')
+{
+  # Classic Fatigue Design Tool format  
+  if(format == 'txt')
+  {
+    #L?s in provresultat och spektra
+    provresultat<-read.table(Fname,header=FALSE,stringsAsFactors=FALSE,fill=TRUE)
+    #Skapa en vektor f?r run out
+    if (length(provresultat)>3) { RO<-provresultat$V4 } else   RO<-NA
+    provresultat$skala<-as.numeric(provresultat$V2)
+    provresultat$Nbrott<-as.numeric(provresultat$V3)
+    provresultat$spektrum<-provresultat$V1
+    spectra<-list(list())
+    N<-numeric()
+    for (i in 1:length(provresultat$spektrum))
+    {
+      spectra[[i]]<-read.table(paste(provresultat$spektrum[i],".txt",sep=""),col.names=c("S","n"),header=FALSE, stringsAsFactors=FALSE)
+      spectra[[i]]$S<-spectra[[i]]$S*provresultat$skala[i]
+      N[i]<-provresultat$Nbrott[i]
+    }
+    
+    dat <- list(provresultat=provresultat, spectra=spectra, N=N, fail=RO)
+  }
+  
+  # Excel format of data
+  if(format == 'xlsx')
+  {
+    #L?s in provresultat och spektra
+    X <- read.xlsx(Fname, 1)  # read first sheet
+    if(ncol(X) < 4)
+    {
+      X[,4]="F"
+    }
+    colnames(X) <- c("spectrum", "scale", "N", "fail")
+    
+    Snames <- unique(X[,1])
+    SPECT = list()
+    for(i in 1:length(Snames))
+    {
+      SPECT[[i]] <- read.xlsx(Fname, sheetName=Snames[i])  # read first sheet
+      colnames(SPECT[[i]]) <- c("S", "n")
+    }
+
+    #Skapa en vektor f?r run out
+    spectra<-list(list())
+    for (i in 1:length(X$spectrum))
+    {
+      spectra[[i]] <- SPECT[[which(Snames==X$spectrum[i])]]
+      spectra[[i]]$S <- spectra[[i]]$S*X$scale[i]
+    }
+    
+    dat <- list(SNVA.data=X, spectra=spectra, N=X$N, fail=X$fail)
+  }
+  
+  
+  dat
 }
 
 #========================================================
@@ -41,7 +105,7 @@ SNVA_TS<-function(dat,...)
 {
   spectra <- dat$spectra
   N <- dat$N
-  RO <- dat$RO
+  RO <- dat$fail
   
   if(is.na(RO)) {RO <- rep('F',length(N))}
   
@@ -69,17 +133,7 @@ SNVA_TS<-function(dat,...)
   
   para$n.iter <- n.of.iter
   
-  #Resultaten skrivs till en fil
-  
-  
-  # if (is.na(name_R))
-  #   utfil<-"resultat/test.csv"
-  # else
-  #   utfil<-paste("resultat/",strsplit(name_R,".",fixed=TRUE)[[1]][1],".csv",sep="")
-  # write.csv(para[[1]],file=utfil,row.names=FALSE)
-  # 
-  # return(NULL)
-  
+
   return(para)
   
 }#function
@@ -87,9 +141,10 @@ SNVA_TS<-function(dat,...)
 
 
 #========================================================
-# Implementation by Pär Johaannesson
+# Estimate SNVA-curve using fix-point interation
+# Implementation by Pär Johannesson based on TS implementation in RISE Fatigue Design Tool
 
-SNVA_TS<-function(dat,...)
+SNVA<-function(dat,...)
   #skattar W?hlerkurvan fr?n spektrumresultat inklusive ?verlevare
   #med hj?lp av en enkel iterativ procedur. N avser antalet cykler till brott f?r hela 
   #spektrat.
@@ -163,17 +218,6 @@ SNVA_TS<-function(dat,...)
   para<-SNw(S=Seq,N=N,RO=RO)
   
   para$n.iter <- n.of.iter
-  
-  #Resultaten skrivs till en fil
-  
-  
-  # if (is.na(name_R))
-  #   utfil<-"resultat/test.csv"
-  # else
-  #   utfil<-paste("resultat/",strsplit(name_R,".",fixed=TRUE)[[1]][1],".csv",sep="")
-  # write.csv(para[[1]],file=utfil,row.names=FALSE)
-  # 
-  # return(NULL)
   
   return(para)
   

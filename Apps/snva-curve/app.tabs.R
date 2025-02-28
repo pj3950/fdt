@@ -18,6 +18,8 @@ TabInput <-
              h3("Fatigue test data"),
              
              p(textOutput("InstText")),
+
+             includeHTML("Download.html"),
              
              # Output
              h3(textOutput("InputText")),

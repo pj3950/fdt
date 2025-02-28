@@ -1,7 +1,7 @@
 #---------------------------------
 # Shiny App: Wöhler Curve Estimation
 #
-# Pär Johannesson, 14-Aug-2020
+# Pär Johannesson, 28-Feb-2025
 #
 # This is a Shiny web application. You can run the application by clicking
 # the 'Run App' button above.
@@ -14,7 +14,7 @@
 
 library(shiny)
 
-source("SNwPJ_v2.5.0.R")
+source("SNwPJ_v2.5.2.R")
 #source("SNwPJ_v2.4.R")
 #source("TbxFatigueDesignTool.R")
 
@@ -178,8 +178,8 @@ server <- function(input, output) {
     
     out1 <- paste0("The fatigue strength at two million cycles is is estimated Se = ", signif(SN$coef$FAT,3), unit, " and ",
                    "the Wöhler slope is estimated to k = ", signif(SN$coef$b,3), ". ",
-                   "A 95% confidence intervals for the fatigue strength is [",
-                   #                   "A ", input$conf.level, "% confidence intervals for the fatigue strength is [",
+                   #"A 95% confidence intervals for the fatigue strength is [",
+                   "A ", input$conf.level, "% confidence intervals for the fatigue strength is [",
                    signif(SN$ci[2,1],3)," ; ", signif(SN$ci[2,2],3), "] ", unit, ", and for the slope [",
                    signif(SN$ci[1,1],3)," ; ", signif(SN$ci[1,2],3), "]."
     )

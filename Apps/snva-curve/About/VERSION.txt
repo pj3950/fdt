@@ -1,1 +1,1 @@
-﻿Spectrum Wöhler Curve Estimation (Shiny app), Version: 0.9, 08-Sep-2020
+Version: 0.8 (beta version), 06-Nov-2023

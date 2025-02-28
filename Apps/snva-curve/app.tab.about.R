@@ -1,7 +1,7 @@
 # =============================================================
 # Toolbox for RISE Fatigue Design Tool
 #
-# Pär Johannesson, 30-Mar-2020
+# Pär Johannesson, 06-Nov-2023
 #
 # Content:
 #   fdt.tabAbout    Tab About
@@ -20,6 +20,7 @@ fdt.tabAbout <-
              h2("About"),
              
              # Version
+             p(strong(includeText("About/APP.txt"))),
              p(strong(includeText("About/VERSION.txt"))),
              
              # RISE Fatigue Design Tool

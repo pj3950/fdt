@@ -15,11 +15,15 @@
 
 rm(list=ls())
 
-#library(xlsx)  # Importing Excel-files
+library(xlsx)  # Importing Excel-files
 
 #source('SNwPJ_v2.1.R') # SN-curve
-source('../SNwPJ_v2.5.0.R') # RISE Fatigue Tool - SN-curve
-source('../SNVA_v1.0.0.R') # RISE Fatigue Tool - SN-curve
+source('../SNwPJ_v2.5.2.R') # RISE Fatigue Tool - SN-curve
+#source('../SNwPJ_v2.5.1.R') # RISE Fatigue Tool - SN-curve
+#source('../SNVA_v1.0.0.R') # RISE Fatigue Tool - SN-curve
+source('../SNVA_v1.1.0.R') # RISE Fatigue Tool - SN-curve
+#source('../SNVA-ML_v0.1.0.R') # RISE Fatigue Tool - SN-curve
+source('../SNVA-ML_v0.2.0.R') # RISE Fatigue Tool - SN-curve
 
 #source('ToolboxSN.R') # PJ - Re-implementation using survreg
 
@@ -42,24 +46,31 @@ print.fig <- function(Pname,print=1)
 #========================================================
 # ==== Read data   ====
 
-# # first row contains variable names
-# library(xlsx)
-# mydata <- read.xlsx("c:/myexcel.xlsx", 1)
-# 
-# # read in the worksheet named mysheet
-# mydata <- read.xlsx("c:/myexcel.xlsx", sheetName = "mysheet")
+# --------------------------------------------------------
+# SNVA-data
+# - data in format:  S, N, RO/F
+
+# Text format
+Fname<-"AgerskovL_SNVA_NARROW.txt"  # Filename of data file
+Fname<-"AgerskovL_SNVA_CA_NARROW.txt"  # Filename of data file
+
+dat <- read.snva.data(Fname, format='txt')
+
+# Excel format
+Fname<-"../data/AgerskovL_SNVA_CA_NARROW.xlsx"  # Filename of data file
+Fname<-"../data/AgerskovL_SNVA_CA_NARROW_run-outs.xlsx"  # Filename of data file
+Fname<-"../data/AgerskovL_SNVA_CA.xlsx"  # Filename of data file
+
+dat <- read.snva.data(Fname, format='xlsx')
 
 # --------------------------------------------------------
-# Alternative 1: Data in text-format (RISE fatigue design tool format)
+# SN-data
 # - data in format:  S, N, RO/F
 
 
-Fname<-"AgerskovL_SN_NARROW.txt"  # Filename of data file
-Fname<-"AgerskovL_SN_CA_NARROW.txt"  # Filename of data file
+Fname2<-"AgerskovL_SN_CA.txt"  # Filename of data file
 
-dat <- read.snva.data(Fname)
-
-
+datSN <- read.sn.data(Fname2, format='txt')
 
 
 #========================================================
@@ -75,13 +86,79 @@ res1
 
 
 
-          res1<-SNw(dat$S,dat$N,dat$fail, 
-                    title="SN-curve: LIFEMOD J1",ylabel="ΔS, Stress range / MPa",xlabel="N, number of cycles to failure")
+res1<-SNw(dat$S,dat$N,dat$RO, 
+          title="SN-curve: LIFEMOD J1",ylabel="ΔS, Stress range / MPa",xlabel="N, number of cycles to failure")
 
 res1
 
-# Print figure
-print.fig("FigExSNcurve-1b")
+# Test input
+resML <- SNVA_TS(dat, int="pred")
+resML <- SNVA_TS(dat, int="conf")
+resML <- SNVA_TS(dat, int="both")
+resML <- SNVA_TS(dat, int="none")
+
+
+# --------------------------------------------------------
+# New ML-implementation
+
+resML <- SNVA.ML(dat)
+
+resML
+
+# Test input
+
+resML <- SNVA.ML(dat, int="pred")
+resML <- SNVA.ML(dat, int="conf")
+resML <- SNVA.ML(dat, int="both")
+resML <- SNVA.ML(dat, int="none")
+
+
+
+
+# Test input: Prior beta
+resML <- SNVA.ML(dat, beta_low=NA, beta_high=NA)
+resML <- SNVA.ML(dat, beta_low=NA, beta_high=6)
+resML <- SNVA.ML(dat, beta_low=4, beta_high=6)
+resML <- SNVA.ML(dat, beta_low=6, beta_high=6.1)
+resML <- SNVA.ML(dat, beta_low=-10, beta_high=20)
+
+# Test input: Prior sigma
+resML <- SNVA.ML(dat, S_prior=NA, S_prior_high=NA)
+resML <- SNVA.ML(dat, S_prior=0.1, S_prior_high=.2)
+resML <- SNVA.ML(dat, beta_low=NA, beta_high=6)
+resML <- SNVA.ML(dat, beta_low=4, beta_high=6)
+resML <- SNVA.ML(dat, beta_low=6, beta_high=6.1)
+resML <- SNVA.ML(dat, beta_low=-10, beta_high=20)
+
+
+
+
+
+# --------------------------------------------------------
+# Compare; SN-curve vs. SNVA-curve
+# RISE fatigue tool
+
+# Test input: int
+SNw(datSN$S,datSN$N,datSN$fail, title="SNw")
+
+SNw.ML(datSN$S,datSN$N,datSN$fail, title="SNw.ML")
+resML <- SNVA.ML(dat, title="SNVA.ML")
+
+
+# Test input: Prior beta
+SNw(datSN$S,datSN$N,datSN$fail, beta_low=4, beta_high=6, title="SNw")
+SNw.ML(datSN$S,datSN$N,datSN$fail, beta_low=4, beta_high=6, title="SNw.ML")
+resML <- SNVA.ML(dat, beta_low=4, beta_high=6, title="SNVA.ML")
+
+SNw(datSN$S,datSN$N,datSN$fail, beta_low=6, beta_high=6.1, title="SNw")
+SNw.ML(datSN$S,datSN$N,datSN$fail, beta_low=6, beta_high=6.1, title="SNw.ML")
+resML <- SNVA.ML(dat, beta_low=6, beta_high=6.1, title="SNVA.ML")
+
+# Slutsats: SNw.ML & SNVA.ML fungerar inte för prior beta
+
+
+SNw.ML(dat$S,dat$N,dat$fail, beta_low=6, beta_high=6.1)
+SNw.ML(dat$S,dat$N,dat$fail, beta_low=-10, beta_high=20)
 
 
 # --------------------------------------------------------

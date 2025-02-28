@@ -1,5 +1,5 @@
 #---------------------------------
-# Shiny App: Wöhler Curve Estimation
+# Shiny App: Wöhler Curve Estimation for Spectrum Loads
 #
 # Pär Johannesson, 14-Aug-2020
 #
@@ -13,9 +13,13 @@
 #---------------------------------
 
 library(shiny)
+library(xlsx)  # Importing Excel-files
 
-source("SNVA_v1.0.0.R")
-source("SNwPJ_v2.5.0.R")
+source('SNVA_v1.1.0.R') # RISE Fatigue Tool - SN-curve
+source('SNVA-ML_v0.2.0.R') # RISE Fatigue Tool - SN-curve
+#source("SNVA-ML_v0.1.0.R")
+#source("SNVA_v1.0.0.R")
+#source("SNwPJ_v2.5.0.R")
 #source("SNwPJ_v2.4.R")
 #source("TbxFatigueDesignTool.R")
 
@@ -30,7 +34,7 @@ source("app.tab.about.R", encoding = "UTF-8")
 ui <- fluidPage(
   
   # Application title
-  titlePanel("Wöhler Curve Estimation - RISE Fatigue Design Tool"),
+  titlePanel("Spectrum Wöhler Curve Estimation - RISE Fatigue Design Tool"),
   
   
   # Output: Tabset w/ plot, summary, and table ----
@@ -88,7 +92,7 @@ server <- function(input, output) {
     Srange <- c(input$ylim.min, input$ylim.max)
     
     # Estiamte & Pot Wöhler curve
-    SN <- SNw(dat$S, dat$N, dat$Fail, 
+    SN <- SNVA.ML(dat, 
               conf.level=input$conf.level/100, pred.S.from.N=pred.S.from.N, pred.N.from.S=pred.N.from.S, 
               formel=input$showEq, int=input$int,
               beta_low=input$b.low, beta_high=input$b.high, S_prior=input$CoV.median, S_prior_high=input$CoV.high,
@@ -96,6 +100,7 @@ server <- function(input, output) {
 
     # Save original data
     SN$dat <- dat
+#    colnames(SN$dat$SNVA.data) <- c("Spectrum", "Scale", "N, Number of cycles", "Failure (F/RO)")
     
     # Output
     SN
@@ -112,24 +117,16 @@ server <- function(input, output) {
     if (!is.null(inFile))
       Fname <- inFile$datapath
     else
-      Fname <- "data/laser_cbj.txt"
+      Fname<-"data/AgerskovL_SNVA_CA_NARROW.xlsx"
+    
     
     # Läs in datafilen till en dataframe
-    dat <- read.table(Fname, sep="", dec=".", header=FALSE, skip=0, as.is=TRUE, fill=TRUE)
-    #Kolla om vi har en tredje kolumn, om inte skapa en sådan.
-    if (ncol(dat)<3)  dat$fail="F"
-    
-    names(dat) <- c("S, Load range", "N, Number of cycles", "Failure (F/RO)")
-    #    names(dat) <- c("Specimen number", "Load level", "Failure")
-    
-    # Estimate Endurance limit
+    dat <- read.snva.data(Fname)
+
+
+    # Estimate SNVA-curve
     SN <- SNcalc0(dat)
-    # SNw(dat$S,dat$N,dat$fail, beta_low=input$b.low, beta_high=input$b.high, #beta_low=beta_prior[1], beta_high=beta_prior[2],
-    #           conf.level=input$conf.level/100, Nstrength=input$N.pred, pred.S.from.N=input$N.pred,
-    #            title="SN-curve", ylabel="Load", xlabel="N, number of cycles to failure")
-    
-    #    FL <- fatlim.est(dat, conf.level=input$conf.level/100, plot=0)
-    
+
     SN
   })
   
@@ -208,9 +205,10 @@ server <- function(input, output) {
   # Instructions: 
   output$InstText <- renderText({ 
     # Check if Estimate fatigue limit
-    return(paste0("Here you can estimate a Wöhler curve with prediction intervals. First you have to upload a file on the left hand side. ",
-                  "The data file should have three columns and the number of rows equal to the number of specimens. 
-                    Each row contains the load level in the first column, the number of cycles in the second and the result failure/run-out, represented by 'F'/'RO', in the last column."
+    return(paste0("This app estimates Wöhler curve for spectrum loads and presents prediction intervals. First you have to upload a file on the left hand side. ",
+                  "The data file should be an Excel-file where the first sheet contains the life data and the following containing load spectra. 
+                  In the first sheet, each row contains the spectrum type, scale, the number of cycles and the result failure/run-out, represented by 'F'/'RO', in the last column.  
+                    The other sheets contain the load spectra in format: ampliltude , number of cycles."
     ))
   })
   
@@ -238,7 +236,8 @@ server <- function(input, output) {
     if (is.null(SN))
       return(NULL)
     
-    return(SN$dat)
+    return(SN$dat$SNVA.data)
+    #    return(SN$dat$provresultat[,4:6])
   })
   
   
@@ -338,26 +337,7 @@ server <- function(input, output) {
       return(txt$out3)
   })
   
-  # ------------
-  # About text: Ver 
-  output$AboutText1 <- renderText({ 
-    "RISE Fatigue Design Tool has been developed at RISE Research Institutes of Sweden, department of Mechanics Research. It is a research platform implementing fatigue and load analysis tools to be used for fatigue design and testing."
-    
-  })
-  
-  # ------------
-  # About text 2: (prediction)
-  output$AboutText2 <- renderText({ 
-    "The calculations are powered by R (a language and environment for statistical computing and graphics). The R-code for the fatigue calculations has been developed by Thomas Svensson and Pär Johannesson."
-    
-  })
-  
-  # ------------
-  # About text: Licence
-  output$AboutTextLicence <- renderText({ 
-    "MIT Licence"
-  })
-  
+
 }
 
 

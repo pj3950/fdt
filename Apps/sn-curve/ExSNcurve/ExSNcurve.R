@@ -6,7 +6,7 @@
 #
 # Data:
 #
-# Pär Johannesson, 2017-12-14
+# Pär Johannesson, 2023-10-31
 #========================================================
 
 
@@ -18,7 +18,9 @@ rm(list=ls())
 library(xlsx)  # Importing Excel-files
 
 #source('SNwPJ_v2.1.R') # SN-curve
-source('SNwPJ_v2.2.R') # RISE Fatigue Tool - SN-curve
+#source('SNwPJ_v2.2.R') # RISE Fatigue Tool - SN-curve
+#source("../SNwPJ_v2.5.0.R")
+source("../SNwPJ_v2.5.2.R")
 
 source('ToolboxSN.R') # PJ - Re-implementation using survreg
 
@@ -53,9 +55,12 @@ print.fig <- function(Pname,print=1)
 # - data in format:  S, N, RO/F
 
 
-Fname<-"LIFEMOD_J1.txt"  # Filename of data file
+#Fname<-"LIFEMOD_J1.txt"  # Filename of data file
+Fname <- "../data/laser_cbj.txt"
 
-dat0 <- read.table(Fname,sep="\t",dec=".",header=FALSE, skip=0, as.is=TRUE)
+#dat0 <- read.table(Fname,sep="\t",dec=".",header=FALSE, skip=0, as.is=TRUE)
+dat0 <- read.table(Fname, sep="", dec=".", header=FALSE, skip=0, as.is=TRUE, fill=TRUE)
+
 names(dat0) <- c("S","N","fail")
 
 dat0
@@ -98,6 +103,11 @@ res1<-SNw(dat$S,dat$N,dat$fail,
          title="SN-curve: LIFEMOD J1",ylabel="ΔS, Stress range / MPa",xlabel="N, number of cycles to failure")
 
 res1
+
+res2<-SNw(dat$S,dat$N,dat$fail, conf.level = 0.9,
+          title="SN-curve: LIFEMOD J1",ylabel="ΔS, Stress range / MPa",xlabel="N, number of cycles to failure")
+
+res2
 
 # Print figure
 print.fig("FigExSNcurve-1b")
